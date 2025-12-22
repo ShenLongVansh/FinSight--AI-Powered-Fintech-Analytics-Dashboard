@@ -1,9 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Lazy initialization - only create client when actually used
+let supabaseInstance: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function getSupabase(): SupabaseClient {
+    if (!supabaseInstance) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Missing Supabase environment variables');
+        }
+
+        supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    }
+    return supabaseInstance;
+}
+
+// Export getter for backward compatibility
+export const supabase = {
+    get client() { return getSupabase(); }
+};
 
 // Types for database tables
 export interface DbTransaction {
@@ -28,7 +45,7 @@ export interface DbPasswordProfile {
 
 // Helper functions
 export async function getTransactions(userId: string): Promise<DbTransaction[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabase.client
         .from('transactions')
         .select('*')
         .eq('user_id', userId)
@@ -54,7 +71,7 @@ export async function saveTransactions(userId: string, transactions: {
         user_id: userId,
     }));
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase.client
         .from('transactions')
         .insert(transactionsWithUser)
         .select();
@@ -67,7 +84,7 @@ export async function saveTransactions(userId: string, transactions: {
 }
 
 export async function deleteAllTransactions(userId: string): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await supabase.client
         .from('transactions')
         .delete()
         .eq('user_id', userId);
@@ -80,7 +97,7 @@ export async function deleteAllTransactions(userId: string): Promise<boolean> {
 }
 
 export async function getPasswordProfiles(userId: string): Promise<DbPasswordProfile[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabase.client
         .from('password_profiles')
         .select('*')
         .eq('user_id', userId)
@@ -97,7 +114,7 @@ export async function savePasswordProfile(userId: string, profile: {
     name: string;
     encrypted_password: string;
 }): Promise<DbPasswordProfile | null> {
-    const { data, error } = await supabase
+    const { data, error } = await supabase.client
         .from('password_profiles')
         .insert({ ...profile, user_id: userId })
         .select()
@@ -111,7 +128,7 @@ export async function savePasswordProfile(userId: string, profile: {
 }
 
 export async function deletePasswordProfile(userId: string, profileId: string): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await supabase.client
         .from('password_profiles')
         .delete()
         .eq('id', profileId)
