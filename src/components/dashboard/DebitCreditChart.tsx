@@ -85,7 +85,7 @@ function CustomLegend() {
 }
 
 // Custom label component for bar values
-const renderBarLabel = (props: { x?: number; y?: number; width?: number; value?: number }) => {
+const renderBarLabel = (props: any) => {
     const { x = 0, y = 0, width = 0, value = 0 } = props;
     if (!value || value === 0) return null;
 

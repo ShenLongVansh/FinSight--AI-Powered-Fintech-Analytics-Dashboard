@@ -23,7 +23,6 @@ const COLORS = [
 ];
 
 // Simple hover shape - just pops out slightly with vibrancy
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, payload } = props;
 

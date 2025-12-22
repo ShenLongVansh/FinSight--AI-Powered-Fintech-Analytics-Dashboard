@@ -282,7 +282,7 @@ export default function LandingPage() {
                             Perfect For Everyone
                         </h2>
                         <p className="text-slate-400 max-w-2xl mx-auto">
-                            Whether you're managing personal finances or tracking business expenses, FinSight adapts to your needs.
+                            Whether you&apos;re managing personal finances or tracking business expenses, FinSight adapts to your needs.
                         </p>
                     </motion.div>
 
