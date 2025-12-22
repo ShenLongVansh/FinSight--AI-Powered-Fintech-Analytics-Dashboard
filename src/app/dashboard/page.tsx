@@ -1,5 +1,7 @@
 'use client';
 
+// Force dynamic rendering - don't prerender at build time
+export const dynamic = 'force-dynamic';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
