@@ -2,7 +2,9 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { createBrowserClient } from '@supabase/ssr';
+import { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     Upload,
@@ -15,7 +17,7 @@ import {
     PanelLeftOpen,
     ChevronUp,
     LogOut,
-    User,
+    User as UserIcon,
 } from 'lucide-react';
 import { PDFUploader } from '@/components/upload';
 import {
@@ -38,8 +40,36 @@ import { playSuccessSound } from '@/lib/utils/sounds';
 type View = 'dashboard' | 'upload' | 'settings';
 
 export default function DashboardPage() {
-    const { user, isLoaded } = useUser();
-    const { signOut, openUserProfile } = useClerk();
+    const router = useRouter();
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // Get user on mount
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setIsLoaded(true);
+        };
+        getUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const signOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/');
+        router.refresh();
+    };
 
     // App state
     const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -309,25 +339,25 @@ export default function DashboardPage() {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer group"
                         >
                             {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                                {user?.imageUrl ? (
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {user?.user_metadata?.avatar_url ? (
                                     <img
-                                        src={user.imageUrl}
+                                        src={user.user_metadata.avatar_url}
                                         alt="Avatar"
                                         className="w-9 h-9 rounded-full object-cover"
                                     />
                                 ) : (
                                     <span className="text-white font-semibold text-sm">
-                                        {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase()}
+                                        {user?.user_metadata?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
                                     </span>
                                 )}
                             </div>
                             <div className="flex-1 text-left min-w-0">
                                 <p className="text-sm font-medium text-white truncate group-hover:text-emerald-400 transition-colors">
-                                    {user?.firstName || user?.emailAddresses[0]?.emailAddress?.split('@')[0]}
+                                    {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                                 </p>
                                 <p className="text-xs text-slate-500 truncate">
-                                    {user?.emailAddresses[0]?.emailAddress}
+                                    {user?.email}
                                 </p>
                             </div>
                             <ChevronUp
@@ -348,17 +378,9 @@ export default function DashboardPage() {
                                 >
                                     <button
                                         onClick={() => {
-                                            openUserProfile();
+                                            signOut();
                                             setIsUserMenuOpen(false);
                                         }}
-                                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors"
-                                    >
-                                        <User size={18} />
-                                        <span className="text-sm">Manage Account</span>
-                                    </button>
-                                    <div className="border-t border-slate-700" />
-                                    <button
-                                        onClick={() => signOut({ redirectUrl: '/' })}
                                         className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                                     >
                                         <LogOut size={18} />
@@ -492,28 +514,27 @@ export default function DashboardPage() {
                                 <Card className="p-6">
                                     <h3 className="text-lg font-semibold text-white mb-4">Account Settings</h3>
                                     <div className="space-y-4">
-                                        <button
-                                            onClick={() => openUserProfile()}
-                                            className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors w-full text-left"
+                                        <div
+                                            className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 w-full"
                                         >
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                                                {user?.imageUrl ? (
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                {user?.user_metadata?.avatar_url ? (
                                                     <img
-                                                        src={user.imageUrl}
+                                                        src={user.user_metadata.avatar_url}
                                                         alt="Avatar"
                                                         className="w-12 h-12 rounded-full object-cover"
                                                     />
                                                 ) : (
                                                     <span className="text-white font-semibold text-lg">
-                                                        {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase()}
+                                                        {user?.user_metadata?.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
                                                     </span>
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-white">{user?.firstName} {user?.lastName}</p>
-                                                <p className="text-sm text-slate-500">{user?.emailAddresses[0]?.emailAddress}</p>
+                                                <p className="font-medium text-white">{user?.user_metadata?.full_name || 'User'}</p>
+                                                <p className="text-sm text-slate-500">{user?.email}</p>
                                             </div>
-                                        </button>
+                                        </div>
                                     </div>
                                 </Card>
 

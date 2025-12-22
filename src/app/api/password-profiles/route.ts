@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { createClient } from '@/lib/supabase/server';
 import { getPasswordProfiles, savePasswordProfile, deletePasswordProfile } from '@/lib/supabase/client';
 import { encrypt, decrypt } from '@/lib/utils/encryption';
 
 // GET: Fetch all password profiles for the current user
 export async function GET() {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const profiles = await getPasswordProfiles(userId);
+        const profiles = await getPasswordProfiles(user.id);
 
         // Decrypt and transform to match frontend type
         const formattedProfiles = profiles.map(p => ({
@@ -32,9 +33,10 @@ export async function GET() {
 // POST: Save a new password profile
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Encrypt both name and password before storing
-        const profile = await savePasswordProfile(userId, {
+        const profile = await savePasswordProfile(user.id, {
             name: encrypt(name),
             encrypted_password: encrypt(encryptedPassword),
         });
@@ -73,9 +75,10 @@ export async function POST(req: NextRequest) {
 // DELETE: Remove a password profile
 export async function DELETE(req: NextRequest) {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -86,7 +89,7 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: 'Profile ID required' }, { status: 400 });
         }
 
-        const success = await deletePasswordProfile(userId, profileId);
+        const success = await deletePasswordProfile(user.id, profileId);
 
         if (!success) {
             return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 });

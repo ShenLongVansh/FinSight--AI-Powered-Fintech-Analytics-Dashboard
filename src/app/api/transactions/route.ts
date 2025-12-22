@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { createClient } from '@/lib/supabase/server';
 import { getTransactions, saveTransactions, deleteAllTransactions } from '@/lib/supabase/client';
 
 // GET: Fetch all transactions for the current user
 export async function GET() {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const transactions = await getTransactions(userId);
+        const transactions = await getTransactions(user.id);
 
         // Transform to match frontend Transaction type
         const formattedTransactions = transactions.map(t => ({
@@ -34,9 +35,10 @@ export async function GET() {
 // POST: Save new transactions
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
             bank_name: t.bankName,
         }));
 
-        const result = await saveTransactions(userId, dbTransactions);
+        const result = await saveTransactions(user.id, dbTransactions);
 
         if (!result.success) {
             return NextResponse.json({ error: 'Failed to save transactions' }, { status: 500 });
@@ -83,13 +85,14 @@ export async function POST(req: NextRequest) {
 // DELETE: Clear all transactions for the current user
 export async function DELETE() {
     try {
-        const { userId } = await auth();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!userId) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const success = await deleteAllTransactions(userId);
+        const success = await deleteAllTransactions(user.id);
 
         if (!success) {
             return NextResponse.json({ error: 'Failed to delete transactions' }, { status: 500 });

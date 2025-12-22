@@ -1,10 +1,9 @@
 'use client';
 
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useAuth, UserButton } from '@clerk/nextjs';
+import UserMenu from '@/components/auth/UserMenu';
 import {
     TrendingUp,
     Shield,
@@ -17,13 +16,11 @@ import {
     Brain,
     PieChart,
     CreditCard,
-    LayoutDashboard,
     Menu,
     X
 } from 'lucide-react';
 
 export default function LandingPage() {
-    const { isSignedIn, isLoaded } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -52,33 +49,6 @@ export default function LandingPage() {
                         </nav>
 
                         <div className="flex items-center gap-2 md:gap-4">
-                            {/* Mobile Auth Controls (Visible when signed in) */}
-                            {isLoaded && isSignedIn && (
-                                <div className="flex md:hidden items-center gap-2 mr-1">
-                                    <Link
-                                        href="/dashboard"
-                                        className="p-2 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-                                        title="Dashboard"
-                                    >
-                                        <LayoutDashboard size={20} />
-                                    </Link>
-                                    <UserButton
-                                        afterSignOutUrl="/"
-                                        appearance={{
-                                            elements: {
-                                                avatarBox: "w-8 h-8",
-                                                userButtonPopoverCard: "bg-slate-900 border border-slate-700",
-                                                userButtonPopoverActions: "bg-slate-900",
-                                                userButtonPopoverActionButton: "text-slate-300 hover:text-white hover:bg-slate-800",
-                                                userButtonPopoverActionButtonText: "text-slate-300",
-                                                userButtonPopoverActionButtonIcon: "text-slate-400",
-                                                userButtonPopoverFooter: "hidden",
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            )}
-
                             {/* Mobile Menu Button */}
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -87,47 +57,9 @@ export default function LandingPage() {
                                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                             </button>
 
-                            {/* Desktop Auth Controls */}
-                            <div className="hidden md:flex items-center gap-4">
-                                {isLoaded && isSignedIn ? (
-                                    <>
-                                        <Link
-                                            href="/dashboard"
-                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
-                                        >
-                                            <LayoutDashboard size={18} />
-                                            Dashboard
-                                        </Link>
-                                        <UserButton
-                                            afterSignOutUrl="/"
-                                            appearance={{
-                                                elements: {
-                                                    userButtonPopoverCard: "bg-slate-900 border border-slate-700",
-                                                    userButtonPopoverActions: "bg-slate-900",
-                                                    userButtonPopoverActionButton: "text-slate-300 hover:text-white hover:bg-slate-800",
-                                                    userButtonPopoverActionButtonText: "text-slate-300",
-                                                    userButtonPopoverActionButtonIcon: "text-slate-400",
-                                                    userButtonPopoverFooter: "hidden",
-                                                }
-                                            }}
-                                        />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href="/sign-in"
-                                            className="text-slate-300 hover:text-white transition-colors"
-                                        >
-                                            Sign In
-                                        </Link>
-                                        <Link
-                                            href="/sign-up"
-                                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
-                                        >
-                                            Get Started
-                                        </Link>
-                                    </>
-                                )}
+                            {/* Auth Controls - handled by UserMenu component */}
+                            <div className="hidden md:block">
+                                <UserMenu />
                             </div>
                         </div>
                     </div>
@@ -164,30 +96,11 @@ export default function LandingPage() {
                                 >
                                     Pricing
                                 </a>
-                                {isLoaded && isSignedIn ? (
-                                    // Signed in: No extra links needed in menu (already in header)
-                                    null
-                                ) : (
-                                    <>
-                                        <div className="border-t border-slate-800 my-2" />
-                                        <div className="flex flex-col gap-4 pt-2">
-                                            <Link
-                                                href="/sign-in"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                                className="px-4 py-3 text-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
-                                            >
-                                                Sign In
-                                            </Link>
-                                            <Link
-                                                href="/sign-up"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                                className="px-4 py-3 text-center rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
-                                            >
-                                                Get Started
-                                            </Link>
-                                        </div>
-                                    </>
-                                )}
+                                {/* Auth links in mobile menu */}
+                                <div className="border-t border-slate-800 my-2" />
+                                <div className="flex flex-col gap-4 pt-2">
+                                    <UserMenu />
+                                </div>
                             </nav>
                         </motion.div>
                     )}
