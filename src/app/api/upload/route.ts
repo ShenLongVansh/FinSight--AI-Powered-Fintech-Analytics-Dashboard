@@ -45,10 +45,8 @@ export async function POST(request: NextRequest) {
         // If password provided, decrypt the PDF using qpdf
         if (password) {
             try {
-                // Use local qpdf binary (works on Vercel)
-                const qpdfPath = path.join(process.cwd(), 'bin', 'qpdf');
                 await execAsync(
-                    `"${qpdfPath}" --password="${password}" --decrypt "${originalPath}" "${decryptedPath}"`
+                    `qpdf --password="${password}" --decrypt "${originalPath}" "${decryptedPath}"`
                 );
                 pdfPath = decryptedPath;
             } catch (decryptError) {

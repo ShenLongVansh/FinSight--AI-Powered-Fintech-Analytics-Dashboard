@@ -1,0 +1,6 @@
+# Ignore node_modules, .next, etc.
+node_modules
+.next
+.git
+.env.local
+*.log
