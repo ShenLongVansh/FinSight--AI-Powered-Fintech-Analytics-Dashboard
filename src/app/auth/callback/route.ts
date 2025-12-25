@@ -7,6 +7,9 @@ export async function GET(request: Request) {
     const code = searchParams.get('code');
     const next = searchParams.get('next') ?? '/dashboard';
 
+    // Use env var for production, fallback to request origin for dev
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
+
     if (code) {
         const cookieStore = await cookies();
         const supabase = createServerClient(
@@ -33,10 +36,10 @@ export async function GET(request: Request) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`);
+            return NextResponse.redirect(`${siteUrl}${next}`);
         }
     }
 
     // Return to sign-in on error
-    return NextResponse.redirect(`${origin}/sign-in`);
+    return NextResponse.redirect(`${siteUrl}/sign-in`);
 }
