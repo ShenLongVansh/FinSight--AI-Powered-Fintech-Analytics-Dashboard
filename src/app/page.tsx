@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+import { User } from '@supabase/supabase-js';
 import UserMenu from '@/components/auth/UserMenu';
 import {
     TrendingUp,
@@ -17,8 +20,115 @@ import {
     PieChart,
     CreditCard,
     Menu,
-    X
+    X,
+    LayoutDashboard,
+    LogIn,
+    LogOut
 } from 'lucide-react';
+
+// Simplified auth button for mobile header
+function MobileAuthButton() {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setLoading(false);
+        };
+        getUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) {
+        return <div className="w-20 h-8 rounded-lg bg-slate-800 animate-pulse" />;
+    }
+
+    if (user) {
+        return (
+            <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/30 transition-colors"
+            >
+                <LayoutDashboard size={16} />
+                Dashboard
+            </Link>
+        );
+    }
+
+    return (
+        <Link
+            href="/sign-in"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-medium hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
+        >
+            <LogIn size={16} />
+            Sign In
+        </Link>
+    );
+}
+
+// Sign out button for mobile menu (only shows when signed in)
+function MobileSignOutButton({ onSignOut }: { onSignOut: () => void }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setLoading(false);
+        };
+        getUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        onSignOut();
+        router.push('/');
+        router.refresh();
+    };
+
+    if (loading || !user) {
+        return null;
+    }
+
+    return (
+        <>
+            <div className="border-t border-slate-800 my-2" />
+            <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 transition-colors w-full text-left"
+            >
+                <LogOut size={18} />
+                Sign Out
+            </button>
+        </>
+    );
+}
 
 export default function LandingPage() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,6 +159,11 @@ export default function LandingPage() {
                         </nav>
 
                         <div className="flex items-center gap-2 md:gap-4">
+                            {/* Mobile Auth Button - simplified */}
+                            <div className="md:hidden">
+                                <MobileAuthButton />
+                            </div>
+
                             {/* Mobile Menu Button */}
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -74,7 +189,7 @@ export default function LandingPage() {
                             exit={{ opacity: 0, height: 0 }}
                             className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur-xl overflow-hidden"
                         >
-                            <nav className="flex flex-col p-4 gap-4">
+                            <nav className="flex flex-col p-4 gap-2">
                                 <a
                                     href="#use-cases"
                                     onClick={() => setIsMobileMenuOpen(false)}
@@ -96,11 +211,7 @@ export default function LandingPage() {
                                 >
                                     Pricing
                                 </a>
-                                {/* Auth links in mobile menu */}
-                                <div className="border-t border-slate-800 my-2" />
-                                <div className="flex flex-col gap-4 pt-2">
-                                    <UserMenu />
-                                </div>
+                                <MobileSignOutButton onSignOut={() => setIsMobileMenuOpen(false)} />
                             </nav>
                         </motion.div>
                     )}
@@ -332,10 +443,9 @@ export default function LandingPage() {
                             </div>
                             <ul className="space-y-4 mb-8">
                                 {[
-                                    'Up to 5 statements/month',
+                                    'Up to 15 statements/month',
                                     'Basic analytics dashboard',
                                     'Auto-categorization',
-                                    'CSV export',
                                 ].map((feature, i) => (
                                     <li key={i} className="flex items-center gap-3 text-slate-300">
                                         <Check size={18} className="text-emerald-400" />
@@ -371,10 +481,10 @@ export default function LandingPage() {
                                 {[
                                     'Unlimited statements',
                                     'Advanced AI insights',
+                                    'CSV export',
                                     'Multi-account support',
                                     'Priority support',
                                     'Custom categories',
-                                    'API access',
                                 ].map((feature, i) => (
                                     <li key={i} className="flex items-center gap-3 text-slate-300">
                                         <Check size={18} className="text-emerald-400" />
@@ -383,7 +493,7 @@ export default function LandingPage() {
                                 ))}
                             </ul>
                             <Link
-                                href="/sign-up"
+                                href="#"
                                 className="block text-center w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
                             >
                                 Start Free Trial

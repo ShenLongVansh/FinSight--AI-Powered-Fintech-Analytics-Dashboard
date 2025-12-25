@@ -417,31 +417,36 @@ export function PDFUploader({
                         exit={{ opacity: 0, height: 0 }}
                         className="mt-6 space-y-3"
                     >
-                        <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                                Processing ({files.filter(f => f.status === 'completed' || f.status === 'error').length}/{files.length})
-                                {isProcessing && elapsedSeconds > 0 && (
-                                    <span className="flex items-center gap-1 text-amber-400 font-mono text-xs">
-                                        <Clock size={12} />
-                                        {formatTime(elapsedSeconds)}
-                                    </span>
-                                )}
-                                {/* Show current file's ETA if available */}
-                                {isProcessing && totalEstimatedSeconds > 0 && (
-                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-xs">
-                                        Est: ~{formatTime(totalEstimatedSeconds)}
-                                    </span>
-                                )}
-                            </h4>
-                            {isProcessing && currentFileIndex !== null && (
-                                <span className="text-xs text-emerald-400 flex items-center gap-1">
-                                    <Loader2 size={12} className="animate-spin" />
-                                    File {currentFileIndex + 1} of {files.length}
-                                </span>
-                            )}
-                        </div>
+                        {/* Processing Section - Current file being processed */}
+                        {files.some(f => f.status === 'processing') && (
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
+                                        <Loader2 size={14} className="animate-spin" />
+                                        Processing
+                                        {isProcessing && elapsedSeconds > 0 && (
+                                            <span className="flex items-center gap-1 text-amber-400 font-mono text-xs">
+                                                <Clock size={12} />
+                                                {formatTime(elapsedSeconds)}
+                                            </span>
+                                        )}
+                                        {isProcessing && totalEstimatedSeconds > 0 && (
+                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-xs">
+                                                Est: ~{formatTime(totalEstimatedSeconds)}
+                                            </span>
+                                        )}
+                                    </h4>
+                                    {isProcessing && currentFileIndex !== null && (
+                                        <span className="text-xs text-slate-400">
+                                            File {currentFileIndex + 1} of {files.length}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                        {files.map((file, index) => (
+                        {/* Render files that are processing or completed/error first */}
+                        {files.filter(f => f.status === 'processing' || f.status === 'completed' || f.status === 'error').map((file, index) => (
                             <motion.div
                                 key={file.id}
                                 initial={{ opacity: 0, x: -20 }}
@@ -579,6 +584,51 @@ export function PDFUploader({
                                         />
                                     </motion.div>
                                 )}
+                            </motion.div>
+                        ))}
+
+                        {/* In Queue Section - Pending files */}
+                        {files.filter(f => f.status === 'pending').length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="text-sm font-medium text-slate-400 flex items-center gap-2 mb-2">
+                                    <Clock size={14} />
+                                    In Queue
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-700/50 text-xs">
+                                        {files.filter(f => f.status === 'pending').length} file{files.filter(f => f.status === 'pending').length !== 1 ? 's' : ''}
+                                    </span>
+                                </h4>
+                            </div>
+                        )}
+
+                        {/* Render pending files */}
+                        {files.filter(f => f.status === 'pending').map((file, index) => (
+                            <motion.div
+                                key={file.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="relative p-4 rounded-xl border transition-all duration-300 bg-slate-800/50 border-slate-700/50"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-10 h-10 rounded-lg flex items-center justify-center bg-slate-700/50">
+                                        <FileText className="w-5 h-5 text-slate-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-white truncate">
+                                            {file.fileName}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            Waiting in queue
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => removeFile(file.id)}
+                                        className="p-1 rounded-lg hover:bg-slate-700/50 text-slate-500 hover:text-slate-300 transition-colors"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
                             </motion.div>
                         ))}
                     </motion.div>

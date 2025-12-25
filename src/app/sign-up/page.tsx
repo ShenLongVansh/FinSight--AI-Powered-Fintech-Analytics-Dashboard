@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Loader2, ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function SignUpPage() {
     const [name, setName] = useState('');
@@ -103,8 +103,8 @@ export default function SignUpPage() {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">F</span>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-violet-500 flex items-center justify-center">
+                                <TrendingUp className="w-5 h-5 text-white" />
                             </div>
                             <span className="text-xl font-bold text-white">FinSight</span>
                         </Link>

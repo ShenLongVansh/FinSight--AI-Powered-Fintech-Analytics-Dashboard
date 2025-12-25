@@ -14,6 +14,7 @@ import {
     LabelList
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { MonthlyData } from '@/types';
 
 interface DebitCreditChartProps {
@@ -84,23 +85,42 @@ function CustomLegend() {
     );
 }
 
-// Custom label component for bar values
-const renderBarLabel = (props: any) => {
-    const { x = 0, y = 0, width = 0, value = 0 } = props;
+// Custom label component for bar values - with position and mobile-smart logic
+const createLabelRenderer = (
+    position: 'above' | 'inside',
+    dataKey: 'totalSpending' | 'totalIncome',
+    data: MonthlyData[],
+    isMobile: boolean
+) => (props: any) => {
+    const { x = 0, y = 0, width = 0, value = 0, index } = props;
     if (!value || value === 0) return null;
+
+    // On mobile, only show label on the taller bar
+    if (isMobile && index !== undefined && data[index]) {
+        const spending = data[index].totalSpending;
+        const income = data[index].totalIncome;
+        const isTaller = dataKey === 'totalSpending' ? spending >= income : income > spending;
+        if (!isTaller) return null;
+    }
 
     const formattedValue = value >= 1000
         ? `₹${(value / 1000).toFixed(1)}k`
         : `₹${value}`;
 
+    // Mobile: always above with bar-specific color. Desktop: original positioning
+    const yPos = y - 8; // Always above the bar
+
+    // Color: always matches bar type (rose for spending, green for income)
+    const fill = dataKey === 'totalSpending' ? '#f43f5e' : '#10b981';
+
     return (
         <text
             x={x + width / 2}
-            y={y - 8}
-            fill="#94a3b8"
+            y={yPos}
+            fill={fill}
             textAnchor="middle"
-            fontSize={11}
-            fontWeight={500}
+            fontSize={isMobile ? 10 : 11}
+            fontWeight={600}
         >
             {formattedValue}
         </text>
@@ -108,6 +128,15 @@ const renderBarLabel = (props: any) => {
 };
 
 export function DebitCreditChart({ data }: DebitCreditChartProps) {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -162,7 +191,7 @@ export function DebitCreditChart({ data }: DebitCreditChartProps) {
                         animationEasing="ease-out"
                         maxBarSize={60}
                     >
-                        <LabelList dataKey="totalSpending" content={renderBarLabel} />
+                        <LabelList dataKey="totalSpending" content={createLabelRenderer('inside', 'totalSpending', data, isMobile)} />
                         {data.map((_, index) => (
                             <Cell key={`spending-${index}`} />
                         ))}
@@ -175,7 +204,7 @@ export function DebitCreditChart({ data }: DebitCreditChartProps) {
                         animationEasing="ease-out"
                         maxBarSize={60}
                     >
-                        <LabelList dataKey="totalIncome" content={renderBarLabel} />
+                        <LabelList dataKey="totalIncome" content={createLabelRenderer('above', 'totalIncome', data, isMobile)} />
                         {data.map((_, index) => (
                             <Cell key={`income-${index}`} />
                         ))}
