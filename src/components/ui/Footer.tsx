@@ -20,7 +20,7 @@ export function Footer({ className = '' }: FooterProps) {
         },
         {
             name: 'Portfolio',
-            href: 'https://portfolio-five-lemon-yoqaqn1pf0.vercel.app/',
+            href: 'https://vansharma-portfolio.vercel.app/',
             icon: Globe,
         },
     ];

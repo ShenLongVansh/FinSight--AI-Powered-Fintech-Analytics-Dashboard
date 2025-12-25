@@ -430,7 +430,7 @@ export default function LandingPage() {
                                 </svg>
                             </a>
                             <a
-                                href="https://portfolio-five-lemon-yoqaqn1pf0.vercel.app/"
+                                href="https://vansharma-portfolio.vercel.app/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2.5 rounded-lg text-slate-500 hover:text-emerald-400 hover:bg-slate-800/50 transition-all"
