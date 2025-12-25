@@ -81,6 +81,10 @@ export default function DashboardPage() {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showPasswordManager, setShowPasswordManager] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
+    const [newProfileName, setNewProfileName] = useState('');
+    const [newProfilePassword, setNewProfilePassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [isAddingProfile, setIsAddingProfile] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [minLoadingComplete, setMinLoadingComplete] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -568,16 +572,82 @@ export default function DashboardPage() {
                         Save passwords for your bank statement PDFs to quickly unlock them during upload.
                     </p>
 
+                    {/* Add New Profile Form */}
+                    <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                        <h4 className="text-sm font-medium text-slate-300 mb-3">Add New Password Profile</h4>
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                if (!newProfileName.trim() || !newProfilePassword.trim()) return;
+                                setIsAddingProfile(true);
+                                try {
+                                    await handleAddPasswordProfile({
+                                        name: newProfileName.trim(),
+                                        encryptedPassword: newProfilePassword
+                                    });
+                                    setNewProfileName('');
+                                    setNewProfilePassword('');
+                                } finally {
+                                    setIsAddingProfile(false);
+                                }
+                            }}
+                            className="space-y-3"
+                        >
+                            <div>
+                                <label htmlFor="profileName" className="text-xs text-slate-500 mb-1 block">Profile Name</label>
+                                <input
+                                    id="profileName"
+                                    type="text"
+                                    placeholder="e.g., HDFC Bank Statement"
+                                    value={newProfileName}
+                                    onChange={(e) => setNewProfileName(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="profilePassword" className="text-xs text-slate-500 mb-1 block">Password</label>
+                                <div className="relative">
+                                    <input
+                                        id="profilePassword"
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        placeholder="Enter PDF password"
+                                        value={newProfilePassword}
+                                        onChange={(e) => setNewProfilePassword(e.target.value)}
+                                        className="w-full px-3 py-2 pr-16 rounded-lg bg-slate-900/50 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-300"
+                                    >
+                                        {showNewPassword ? 'Hide' : 'Show'}
+                                    </button>
+                                </div>
+                            </div>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                size="sm"
+                                className="w-full"
+                                disabled={isAddingProfile || !newProfileName.trim() || !newProfilePassword.trim()}
+                            >
+                                {isAddingProfile ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving...</>
+                                ) : (
+                                    'Add Profile'
+                                )}
+                            </Button>
+                        </form>
+                    </div>
+
+                    {/* Saved Profiles */}
                     {passwordProfiles.length === 0 ? (
-                        <div className="text-center py-8">
-                            <Key className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                            <p className="text-slate-500">No saved passwords yet</p>
-                            <p className="text-sm text-slate-600">
-                                Add a password when uploading PDFs to save it here
-                            </p>
+                        <div className="text-center py-4">
+                            <p className="text-sm text-slate-500">No saved passwords yet</p>
                         </div>
                     ) : (
                         <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-slate-300">Saved Profiles</h4>
                             {passwordProfiles.map(profile => (
                                 <div
                                     key={profile.id}

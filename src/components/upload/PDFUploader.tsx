@@ -61,6 +61,7 @@ export function PDFUploader({
 
     // Track pending files to clear on modal cancel
     const pendingFileIdsRef = useRef<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Timer effect - counts up elapsed seconds
     useEffect(() => {
@@ -113,6 +114,10 @@ export function PDFUploader({
         if (selectedFiles.length > 0) {
             addFiles(selectedFiles);
         }
+        // Reset the input value so the same file can be selected again
+        if (e.target) {
+            e.target.value = '';
+        }
     };
 
     const addFiles = (newFiles: File[]) => {
@@ -153,6 +158,10 @@ export function PDFUploader({
         setShowPasswordModal(false);
         setGlobalPassword('');
         setSelectedProfileId('');
+        // Reset file input so the same files can be selected again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const removeFile = (id: string) => {
@@ -381,6 +390,7 @@ export function PDFUploader({
 
                     <label className="inline-block cursor-pointer">
                         <input
+                            ref={fileInputRef}
                             type="file"
                             accept=".pdf"
                             multiple
