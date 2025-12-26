@@ -69,6 +69,9 @@ NEXT_PUBLIC_SITE_URL=your_site_url
 ```
 
 ## 📸 Screenshots
+![Home Page](public/Screenshots/Home-Page.png)
+![Analytics](public/Screenshots/Processing-Statements.png)
+![Dashboard](public/Screenshots/Dashboard.png)
 
 *Coming soon*
 
@@ -87,4 +90,4 @@ This project is for portfolio/demonstration purposes.
 
 ---
 
-Built with ❤️ by [Vansh Sharma](https://github.com/ShenLongVansh/)
+Built with ❤️ by [Vansh Sharma](https://vansharma-portfolio.vercel.app/)
