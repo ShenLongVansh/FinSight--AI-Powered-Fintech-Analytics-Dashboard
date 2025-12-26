@@ -69,11 +69,25 @@ NEXT_PUBLIC_SITE_URL=your_site_url
 ```
 
 ## 📸 Screenshots
-![Home Page](public/Screenshots/Home-Page.png)
-![Analytics](public/Screenshots/Processing-Statements.png)
-![Dashboard](public/Screenshots/Dashboard.png)
 
-*Coming soon*
+### 🏠 Home Page
+> Clean, modern landing with secure Google OAuth login
+
+![Home Page](public/Screenshots/Home-Page.png)
+
+---
+
+### ⚙️ Processing Statements
+> AI-powered extraction in action — parsing transactions from your PDF
+
+![Processing Statements](public/Screenshots/Processing-Statements.png)
+
+---
+
+### 📊 Dashboard
+> Interactive analytics with spending trends, category breakdowns & insights
+
+![Dashboard](public/Screenshots/Dashboard.png)
 
 ## 🗺️ Roadmap — Features Coming Soon
 
